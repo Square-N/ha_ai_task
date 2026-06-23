@@ -60,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: YanfengAIConfigEntry) ->
     if not await _test_api_connection(session, entry.data[CONF_API_KEY]):
         LOGGER.error("API connection test failed")
         await session.close()
-        raise ConfigEntryNotReady("Failed to connect to ModelScope API")
+        raise ConfigEntryNotReady("Failed to connect to AI API")
 
     LOGGER.info("API connection test successful")
 
@@ -91,35 +91,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: YanfengAIConfigEntry) -
         await session.close()
     
     return unload_ok
-
-
-async def _test_api_connection(session: aiohttp.ClientSession, api_key: str) -> bool:
-    """Test the ModelScope API connection."""
-    try:
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        }
-        
-        # Test ModelScope API
-        modelscope_payload = {
-            "model": "Qwen/Qwen2.5-72B-Instruct",
-            "messages": [{"role": "user", "content": "Hello"}],
-            "max_tokens": 10,
-        }
-        
-        async with session.post(
-            "https://api-inference.modelscope.cn/v1/chat/completions",
-            headers=headers,
-            json=modelscope_payload,
-        ) as response:
-            if response.status == 200:
-                LOGGER.info("ModelScope API connection successful")
-                return True
-            else:
-                LOGGER.error("ModelScope API test failed with status: %s", response.status)
-                return False
-            
-    except Exception as err:
-        LOGGER.error("Failed to test ModelScope API connection: %s", err)
-        return False
