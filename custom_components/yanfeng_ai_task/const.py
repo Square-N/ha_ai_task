@@ -66,13 +66,18 @@ DEFAULT_PROMPT = """你是一个专业的智能家居助手，运行在 Home Ass
 记住：你的目标是让用户的智能家居体验更加便捷和愉快。"""
 
 # ModelScope API-Inference base URL
-MODELSCOPE_API_BASE = "https://api-inference.modelscope.cn/"
+# MODELSCOPE_API_BASE = "https://api-inference.modelscope.cn/"
 
-# Supported models (ModelScope only)
+# 百炼 API-Inference base URL
+DASHSCOPE_API_BASE = "https://dashscope.aliyuncs.com/compatible-mode/"
+
+# Supported models
 SUPPORTED_CHAT_MODELS = [
-    "Qwen/Qwen2.5-72B-Instruct",
-    "Qwen/Qwen3-32B",
-    "Qwen/Qwen3-VL-235B-A22B-Instruct",
+    "qwen3-vl-flash",
+    "qwen3-32b",
+    "qwen-turbo-latest",
+    "qwen-plus",
+    "qwen-max",
 ]
 
 SUPPORTED_IMAGE_MODELS = [
@@ -87,7 +92,7 @@ IMAGE_EDITING_MODELS = [
 
 # Recommended models
 # Note: Use pure text models for function calling, not VL (Vision-Language) models
-RECOMMENDED_CHAT_MODEL = "Qwen/Qwen2.5-72B-Instruct"  # Best for function calling
+RECOMMENDED_CHAT_MODEL = "qwen3-vl-flash"  # Best for function calling
 RECOMMENDED_IMAGE_MODEL = "Qwen/Qwen-Image"
 
 # Task polling settings
@@ -128,5 +133,5 @@ TIMEOUT_SECONDS = 30
 # Error messages
 ERROR_API_KEY_REQUIRED = "API key is required"
 ERROR_MODEL_NOT_SUPPORTED = "Model not supported"
-ERROR_GETTING_RESPONSE = "Error getting response from ModelScope API"
-ERROR_INVALID_RESPONSE = "Invalid response from ModelScope API"
+ERROR_GETTING_RESPONSE = "Error getting response from AI API"
+ERROR_INVALID_RESPONSE = "Invalid response from AI API"
