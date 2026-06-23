@@ -1,24 +1,3 @@
-<p align="center">
-  <img src="logo.png" alt="岩风 AI Task" width="300"/>
-</p>
-
-<h1 align="center">Yanfeng AI Task</h1>
-
-<p align="center">
-  <strong>基于 ModelScope 的 Home Assistant AI 集成</strong>
-</p>
-
-<p align="center">
-  <a href="https://github.com/custom-components/hacs">
-    <img src="https://img.shields.io/badge/HACS-Custom-orange.svg" alt="HACS Custom">
-  </a>
-  <img src="https://img.shields.io/badge/Home%20Assistant-2024.10+-blue.svg" alt="Home Assistant">
-  <img src="https://img.shields.io/badge/Python-3.11+-blue.svg" alt="Python">
-  <img src="https://img.shields.io/badge/ModelScope-API-green.svg" alt="ModelScope">
-</p>
-
----
-
 ## ✨ 功能特性
 
 - 🤖 **对话代理** - 支持中文和多语言自然语言对话
@@ -655,14 +634,3 @@ tail -f /config/home-assistant.log | grep yanfeng
 - [ModelScope](https://modelscope.cn/) - AI 模型服务
 - [Qwen Team](https://github.com/QwenLM) - 强大的语言模型
 - [智谱AI集成](https://github.com/knoop7/zhipuai) - 三层架构设计灵感来源
-
-## 📞 联系作者或打赏感谢
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/c1c5a7c8-1643-4ec8-a5a6-f76da3b90fc2" width="250">
-  <img src="https://github.com/user-attachments/assets/873ff78e-b04e-4f89-9bb8-fa5fccadc775" width="250">
-  <img src="https://github.com/user-attachments/assets/a3d7534a-77b8-407a-a559-1d9699cb23bc" width="250">
-</p>
-
-<p align="center">
-  Made with ❤️ by Yanfeng | Powered by ModelScope
-</p>
