@@ -59,7 +59,7 @@ from .const import (
     SUPPORTED_IMAGE_MODELS,
     TIMEOUT_SECONDS,
 )
-from .helpers import ModelScopeAPIClient
+from .helpers import DashScopeAPIClient
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -70,7 +70,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     )
     
     try:
-        client = ModelScopeAPIClient(session, data[CONF_API_KEY])
+        client = DashScopeAPIClient(session, data[CONF_API_KEY])
         
         # Test API connection with selected model
         test_model = data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
