@@ -31,7 +31,7 @@ from .const import (
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
 )
-from .helpers import ModelScopeAPIClient, format_messages_for_modelscope
+from .helpers import DashScopeAPIClient, format_messages_for_dashscope
 
 ERROR_GETTING_RESPONSE = "Error getting response from ModelScope"
 
@@ -101,9 +101,9 @@ class YanfengAIBaseEntity:
         return self.entry.data[CONF_API_KEY]
 
     @property
-    def client(self) -> ModelScopeAPIClient:
+    def client(self) -> DashScopeAPIClient:
         """Return the ModelScope API client."""
-        return ModelScopeAPIClient(self.session, self.api_key)
+        return DashScopeAPIClient(self.session, self.api_key)
 
     def _get_option(self, key: str, default: Any = None) -> Any:
         """Get option from subentry data."""
