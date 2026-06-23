@@ -85,9 +85,40 @@ async def async_update_options(
 async def async_unload_entry(hass: HomeAssistant, entry: YanfengAIConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    
+
     if unload_ok:
         session = entry.runtime_data
         await session.close()
-    
+
     return unload_ok
+
+
+async def _test_api_connection(session: aiohttp.ClientSession, api_key: str) -> bool:
+    """Test the DashScope API connection."""
+    try:
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+
+        dashscope_payload = {
+            "model": "qwen3-vl-flash",
+            "messages": [{"role": "user", "content": "Hello"}],
+            "max_tokens": 10,
+        }
+
+        async with session.post(
+            "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+            headers=headers,
+            json=dashscope_payload,
+        ) as response:
+            if response.status == 200:
+                LOGGER.info("DashScope API connection successful")
+                return True
+            else:
+                LOGGER.error("DashScope API test failed with status: %s", response.status)
+                return False
+
+    except Exception as err:
+        LOGGER.error("Failed to test DashScope API connection: %s", err)
+        return False
