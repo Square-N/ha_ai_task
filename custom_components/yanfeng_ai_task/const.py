@@ -28,7 +28,7 @@ DEFAULT_AI_TASK_NAME = "Yanfeng AI Task"
 DEFAULT_CONVERSATION_NAME = "Yanfeng AI Conversation"
 DEFAULT_TEMPERATURE = 0.7
 DEFAULT_TOP_P = 0.9
-DEFAULT_MAX_TOKENS = 2048
+DEFAULT_MAX_TOKENS = 8192  # Increased from 2048 — reasoning models (e.g. qwen3.6-flash) consume significant tokens for thinking
 DEFAULT_RESPONSE_MODE = "friendly"
 
 # Default Chinese-optimized prompt for Home Assistant
@@ -119,8 +119,8 @@ RECOMMENDED_AI_TASK_OPTIONS = {
     CONF_RECOMMENDED: True,
 }
 
-# Timeout settings
-TIMEOUT_SECONDS = 30
+# Timeout settings — increased from 30 to 60s for reasoning models (e.g. qwen3.6-flash takes longer)
+TIMEOUT_SECONDS = 60
 
 # Error messages
 ERROR_API_KEY_REQUIRED = "API key is required"
