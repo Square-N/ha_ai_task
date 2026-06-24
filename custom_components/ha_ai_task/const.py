@@ -5,7 +5,7 @@ import logging
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.helpers import llm
 
-DOMAIN = "yanfeng_ai_task"
+DOMAIN = "ha_ai_task"
 LOGGER = logging.getLogger(__package__)
 
 # Configuration keys
@@ -72,7 +72,10 @@ DASHSCOPE_API_BASE = "https://dashscope.aliyuncs.com/compatible-mode/"
 SUPPORTED_CHAT_MODELS = [
     "qwen3.6-flash",
     "qwen3-vl-flash",
+    "qwen3-32b",
+    "qwen-turbo-latest",
     "qwen-plus",
+    "qwen-max",
 ]
 
 SUPPORTED_IMAGE_MODELS = [
