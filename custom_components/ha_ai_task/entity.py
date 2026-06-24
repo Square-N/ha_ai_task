@@ -70,6 +70,8 @@ def _format_tool(tool: llm.Tool, custom_serializer: Any | None) -> dict[str, Any
 class YanfengAIBaseEntity:
     """Base entity for Yanfeng AI Task."""
 
+    _attr_icon = "mdi:robot-outline"
+
     def __init__(self, entry: ConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
         self.entry = entry
@@ -112,6 +114,9 @@ class YanfengAIBaseEntity:
 
 class YanfengAILLMBaseEntity(YanfengAIBaseEntity):
     """Base entity for LLM-based entities."""
+
+    _attr_icon = "mdi:brain"
+
 
     async def _async_handle_chat_log(
         self,
