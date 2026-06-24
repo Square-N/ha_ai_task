@@ -199,6 +199,35 @@ class YanfengAILLMBaseEntity(YanfengAIBaseEntity):
                     chat_log.content.append(assistant_content)
                     break
 
+                # Handle truncation for reasoning models (e.g. qwen3.6-flash)
+                # When max_tokens is too tight for the reasoning overhead, models may
+                # hit the length limit mid-response. We handle each case gracefully.
+                if finish_reason == "length":
+                    LOGGER.warning(
+                        "Model response was truncated (finish_reason='length'). "
+                        "Token limit may be insufficient for reasoning models. "
+                        "Consider increasing max_tokens (current: %d).", max_tokens
+                    )
+                    if content:
+                        # Content truncated but we got something useful
+                        assistant_content = conversation.AssistantContent(
+                            agent_id=self.entry.entry_id,
+                            content=content,
+                        )
+                        chat_log.content.append(assistant_content)
+                        break
+                    if tool_calls:
+                        # Truncated mid-tool-call — try to use what we have
+                        LOGGER.warning("Truncated response has tool_calls, attempting to process")
+                    else:
+                        # No content and no tool_calls — safe fallback
+                        assistant_content = conversation.AssistantContent(
+                            agent_id=self.entry.entry_id,
+                            content="抱歉，响应被截断了。请在设置中增加 max_tokens 后重试。",
+                        )
+                        chat_log.content.append(assistant_content)
+                        break
+
                 # Add assistant message to chat_log
                 if tool_calls:
                     # Model wants to call tools
@@ -278,7 +307,12 @@ class YanfengAILLMBaseEntity(YanfengAIBaseEntity):
                         chat_log.content.append(assistant_content)
                         LOGGER.debug("Added final assistant response to chat_log")
                     else:
-                        LOGGER.warning("Empty content in final response")
+                        LOGGER.warning("Empty content in final response, adding fallback")
+                        assistant_content = conversation.AssistantContent(
+                            agent_id=self.entry.entry_id,
+                            content="已处理完毕。",
+                        )
+                        chat_log.content.append(assistant_content)
 
                     # Done, exit loop
                     break
@@ -294,6 +328,22 @@ class YanfengAILLMBaseEntity(YanfengAIBaseEntity):
         else:
             # Reached MAX_TOOL_ITERATIONS without finishing
             LOGGER.warning("Reached maximum tool iterations (%d), stopping", MAX_TOOL_ITERATIONS)
+
+        # Safety: ensure chat_log ends with AssistantContent
+        # Reasoning models may leave chat_log in an unexpected state (e.g. after
+        # finish_reason="length" or empty content), which causes HA to throw
+        # "Unexpected error during intent recognition" in async_get_result_from_chat_log.
+        if not chat_log.content or not isinstance(chat_log.content[-1], conversation.AssistantContent):
+            LOGGER.warning(
+                "Chat log does not end with AssistantContent (last: %s), adding fallback",
+                type(chat_log.content[-1]).__name__ if chat_log.content else "None",
+            )
+            chat_log.content.append(
+                conversation.AssistantContent(
+                    agent_id=self.entry.entry_id,
+                    content="已处理完毕。",
+                )
+            )
 
     def _prepare_messages_from_chat_log(
         self,
@@ -442,15 +492,8 @@ class YanfengAILLMBaseEntity(YanfengAIBaseEntity):
             if "choices" in response and response["choices"]:
                 choice = response["choices"][0]
                 if "message" in choice and "content" in choice["message"]:
-                    return choice["message"]["content"]
-            
-            # Fallback for direct output format
-            if "output" in response and "text" in response["output"]:
-                return response["output"]["text"]
-            
-            LOGGER.error("Unable to extract text from response: %s", response)
+                    return choice["message"]["content"] or ""
             return ""
-            
-        except (KeyError, IndexError, TypeError) as err:
+        except Exception as err:
             LOGGER.error("Error extracting response text: %s", err)
             return ""
