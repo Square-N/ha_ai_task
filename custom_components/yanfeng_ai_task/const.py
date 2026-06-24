@@ -72,10 +72,7 @@ DASHSCOPE_API_BASE = "https://dashscope.aliyuncs.com/compatible-mode/"
 SUPPORTED_CHAT_MODELS = [
     "qwen3.6-flash",
     "qwen3-vl-flash",
-    "qwen3-32b",
-    "qwen-turbo-latest",
     "qwen-plus",
-    "qwen-max",
 ]
 
 SUPPORTED_IMAGE_MODELS = [
