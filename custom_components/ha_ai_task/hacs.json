@@ -1,7 +1,0 @@
-{
-  "name": "AI Task (DashScope)",
-  "content_in_root": false,
-  "filename": "ha_ai_task",
-  "render_readme": true,
-  "homeassistant": "2024.10.0"
-}
