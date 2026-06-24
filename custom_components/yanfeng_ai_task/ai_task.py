@@ -18,20 +18,18 @@ from .const import (
     CONF_CUSTOM_IMAGE_MODEL,
     CONF_IMAGE_MODEL,
     CONF_RECOMMENDED,
-    IMAGE_EDITING_MODELS,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_IMAGE_MODEL,
-    SUPPORTED_IMAGE_MODELS,
 )
 from .entity import (
     ERROR_GETTING_RESPONSE,
     YanfengAILLMBaseEntity,
 )
+from .helpers import file_to_data_uri
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigSubentry
-
     from . import YanfengAIConfigEntry
 
 
@@ -41,11 +39,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AI Task entities."""
-    # Only create entities for subentries, not for main config entry
     for subentry in config_entry.subentries.values():
         if subentry.subentry_type != "ai_task_data":
             continue
-
         async_add_entities(
             [YanfengAITaskEntity(hass, config_entry, subentry)],
             config_subentry_id=subentry.subentry_id,
@@ -67,7 +63,6 @@ class YanfengAITaskEntity(
         """Initialize the entity."""
         super().__init__(entry, subentry)
         self.hass = hass
-        # Enable all supported features by default
         self._attr_supported_features = (
             ai_task.AITaskEntityFeature.GENERATE_DATA
             | ai_task.AITaskEntityFeature.GENERATE_IMAGE
@@ -81,16 +76,13 @@ class YanfengAITaskEntity(
     ) -> ai_task.GenDataTaskResult:
         """Handle a generate data task."""
         LOGGER.debug("Starting generate_data task. Chat log has %d items before processing",
-                    len(chat_log.content))
+                     len(chat_log.content))
 
         try:
             await self._async_handle_chat_log(chat_log, task.structure)
         except Exception as err:
             LOGGER.error("Error in _async_handle_chat_log: %s", err, exc_info=True)
             raise HomeAssistantError(f"Error processing chat: {err}") from err
-
-        LOGGER.debug("After _async_handle_chat_log. Chat log has %d items",
-                    len(chat_log.content))
 
         if not chat_log.content:
             LOGGER.error("Chat log is empty after processing")
@@ -118,14 +110,8 @@ class YanfengAITaskEntity(
         try:
             data = json_loads(text)
         except JSONDecodeError as err:
-            LOGGER.error(
-                "Failed to parse JSON response: %s. Response: %s",
-                err,
-                text,
-            )
-            raise HomeAssistantError(
-                f"Failed to parse JSON response: {err}"
-            ) from err
+            LOGGER.error("Failed to parse JSON response: %s. Response: %s", err, text)
+            raise HomeAssistantError(f"Failed to parse JSON response: {err}") from err
 
         return ai_task.GenDataTaskResult(
             conversation_id=chat_log.conversation_id,
@@ -151,19 +137,18 @@ class YanfengAITaskEntity(
                 # Check for image attachments (for image editing)
                 if content.attachments:
                     for attachment in content.attachments:
-                        # Check if it's an image attachment
                         if attachment.mime_type and attachment.mime_type.startswith("image/"):
                             image_attachment_path = attachment.path
                             image_attachment_mime_type = attachment.mime_type
                             LOGGER.debug("Found image attachment for editing: %s (mime_type: %s)",
-                                        attachment.path, attachment.mime_type)
+                                         attachment.path, attachment.mime_type)
                             break
                 break
 
         if not prompt:
             raise HomeAssistantError("No prompt found for image generation")
 
-        # Get configured image model - priority: custom_image_model > image_model > default
+        # Get configured image model
         custom_image_model = self._get_option(CONF_CUSTOM_IMAGE_MODEL)
         if custom_image_model and custom_image_model.strip():
             image_model = custom_image_model.strip()
@@ -175,52 +160,39 @@ class YanfengAITaskEntity(
         # Handle image URL for editing models
         image_url = None
 
-        # Extract URL from prompt text
+        # 1. Extract URL from prompt text (public URLs)
         import re
         url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
         url_matches = re.findall(url_pattern, prompt)
 
         if url_matches:
-            # Use the first URL found as the image URL
             image_url = url_matches[0]
-            # Remove the URL from the prompt
             prompt = re.sub(url_pattern, '', prompt).strip()
             LOGGER.info("Extracted image URL from prompt: %s", image_url)
+
+        # 2. For local attachment, convert to base64 data URI (works with DashScope native API)
         elif image_attachment_path:
-            # Convert local attachment to HTTP URL
-            # Use Home Assistant's media source system
             try:
-                from pathlib import Path
-
-                # Convert Path to string if needed
-                file_path = Path(image_attachment_path) if not isinstance(image_attachment_path, Path) else image_attachment_path
-
-                # Generate HTTP URL for the attachment through HA's media system
-                # The attachment path is typically in /media or /config/media
-                relative_path = file_path.name  # Get just the filename
-
-                # HA serves media through /media/local/ URL
-                # For attachments, we need to construct a valid URL
-                image_url = f"{self.hass.config.internal_url}/media/local/{relative_path}"
-
-                LOGGER.debug("Generated image URL from attachment: %s", image_url)
+                image_url = await file_to_data_uri(
+                    image_attachment_path, image_attachment_mime_type
+                )
+                LOGGER.debug("Converted local image to data URI (%d chars)", len(image_url))
             except Exception as err:
-                LOGGER.warning("Failed to generate HTTP URL from attachment path: %s, will skip image", err)
+                LOGGER.warning("Failed to convert local image: %s, will try without it", err)
 
         LOGGER.debug("Using image model: %s for prompt: %s (image_url: %s)",
-                    image_model, prompt[:100], image_url or "none")
+                     image_model, prompt[:100], "yes" if image_url else "none")
 
         try:
-            # Use image generation model
             response = await self.client.generate_image(
                 model=image_model,
                 prompt=prompt,
                 image_url=image_url,
-                size="1024*1024",
+                size="2048*1536",
                 n=1,
             )
 
-            # Extract image URLs from ModelScope response
+            # Extract image URLs from response (OpenAI-compatible format)
             image_urls = []
             if "data" in response:
                 for item in response["data"]:
