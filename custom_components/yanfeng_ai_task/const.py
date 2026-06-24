@@ -16,11 +16,11 @@ CONF_TEMPERATURE = "temperature"
 CONF_TOP_P = "top_p"
 CONF_MAX_TOKENS = "max_tokens"
 CONF_CHAT_MODEL = "chat_model"
-CONF_CUSTOM_CHAT_MODEL = "custom_chat_model"  # 自定义聊天模型
+CONF_CUSTOM_CHAT_MODEL = "custom_chat_model"
 CONF_IMAGE_MODEL = "image_model"
-CONF_CUSTOM_IMAGE_MODEL = "custom_image_model"  # 自定义图像模型
+CONF_CUSTOM_IMAGE_MODEL = "custom_image_model"
 CONF_RECOMMENDED = "recommended"
-CONF_RESPONSE_MODE = "response_mode"  # 第一层响应模式
+CONF_RESPONSE_MODE = "response_mode"
 
 # Default values
 DEFAULT_TITLE = "Yanfeng AI Task"
@@ -29,7 +29,7 @@ DEFAULT_CONVERSATION_NAME = "Yanfeng AI Conversation"
 DEFAULT_TEMPERATURE = 0.7
 DEFAULT_TOP_P = 0.9
 DEFAULT_MAX_TOKENS = 2048
-DEFAULT_RESPONSE_MODE = "friendly"  # 默认响应模式：友好模式
+DEFAULT_RESPONSE_MODE = "friendly"
 
 # Default Chinese-optimized prompt for Home Assistant
 DEFAULT_PROMPT = """你是一个专业的智能家居助手，运行在 Home Assistant 系统中。
@@ -65,14 +65,12 @@ DEFAULT_PROMPT = """你是一个专业的智能家居助手，运行在 Home Ass
 
 记住：你的目标是让用户的智能家居体验更加便捷和愉快。"""
 
-# ModelScope API-Inference base URL
-# MODELSCOPE_API_BASE = "https://api-inference.modelscope.cn/"
-
-# 百炼 API-Inference base URL
+# DashScope compatible-mode API base URL
 DASHSCOPE_API_BASE = "https://dashscope.aliyuncs.com/compatible-mode/"
 
-# Supported models
+# Supported chat models (DashScope compatible-mode)
 SUPPORTED_CHAT_MODELS = [
+    "qwen3.6-flash",
     "qwen3-vl-flash",
     "qwen3-32b",
     "qwen-turbo-latest",
@@ -81,28 +79,25 @@ SUPPORTED_CHAT_MODELS = [
 ]
 
 SUPPORTED_IMAGE_MODELS = [
-    "Qwen/Qwen-Image",
-    "Qwen/Qwen-Image-Edit",
+    "qwen-image-2.0-pro",
 ]
 
-# Models that require an input image for editing
 IMAGE_EDITING_MODELS = [
-    "Qwen/Qwen-Image-Edit",
+    "qwen-image-2.0-pro",
 ]
 
 # Recommended models
-# Note: Use pure text models for function calling, not VL (Vision-Language) models
-RECOMMENDED_CHAT_MODEL = "qwen3-vl-flash"  # Best for function calling
-RECOMMENDED_IMAGE_MODEL = "Qwen/Qwen-Image"
+RECOMMENDED_CHAT_MODEL = "qwen3.6-flash"
+RECOMMENDED_IMAGE_MODEL = "qwen-image-2.0-pro"
 
 # Task polling settings
-TASK_POLL_INTERVAL = 2  # seconds
-TASK_MAX_WAIT_TIME = 300  # 5 minutes
+TASK_POLL_INTERVAL = 2
+TASK_MAX_WAIT_TIME = 300
 
-# Response modes for Layer 1 (first-layer intent recognition)
-RESPONSE_MODE_FRIENDLY = "friendly"  # 有 friendly_name 时说话，否则静音
-RESPONSE_MODE_SILENT = "silent"      # 总是静音，只播提示音
-RESPONSE_MODE_SIMPLE = "simple"      # 总是返回简单确认（"好的"、"完成"）
+# Response modes
+RESPONSE_MODE_FRIENDLY = "friendly"
+RESPONSE_MODE_SILENT = "silent"
+RESPONSE_MODE_SIMPLE = "simple"
 
 RESPONSE_MODES = [
     RESPONSE_MODE_FRIENDLY,
@@ -112,9 +107,9 @@ RESPONSE_MODES = [
 
 # Recommended options for Conversation
 RECOMMENDED_CONVERSATION_OPTIONS = {
-    CONF_PROMPT: DEFAULT_PROMPT,  # Use Chinese-optimized prompt
-    CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],  # Enable device control
-    CONF_RESPONSE_MODE: DEFAULT_RESPONSE_MODE,  # Default response mode
+    CONF_PROMPT: DEFAULT_PROMPT,
+    CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+    CONF_RESPONSE_MODE: DEFAULT_RESPONSE_MODE,
     CONF_RECOMMENDED: True,
 }
 
