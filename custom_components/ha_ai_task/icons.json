@@ -17,12 +17,14 @@
     }
   },
   "services": {
-    "generate_data": "mdi:file-document-outline",
-    "generate_image": "mdi:image-outline"
-  },
-  "integration": {
-    "ha_ai_task": {
-      "default": "mdi:brain"
+    "generate_data": {
+      "service": "mdi:file-document-outline"
+    },
+    "generate_image": {
+      "service": "mdi:image-outline"
+    },
+    "generate_content": {
+      "service": "mdi:brain"
     }
   }
 }
