@@ -1,4 +1,4 @@
-"""Base entity for Yanfeng AI Task integration."""
+"""Base entity for AI Task integration."""
 
 from __future__ import annotations
 
@@ -67,8 +67,8 @@ def _format_tool(tool: llm.Tool, custom_serializer: Any | None) -> dict[str, Any
     return tool_spec
 
 
-class YanfengAIBaseEntity:
-    """Base entity for Yanfeng AI Task."""
+class AITaskBaseEntity:
+    """Base entity for AI Task."""
 
     _attr_icon = "mdi:robot-outline"
 
@@ -81,7 +81,7 @@ class YanfengAIBaseEntity:
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
-            manufacturer="Yanfeng",
+            manufacturer="ha_ai_task",
             model="AI Task Integration",
             sw_version="2.2.2",
             entry_type=dr.DeviceEntryType.SERVICE,
@@ -112,7 +112,7 @@ class YanfengAIBaseEntity:
         return self.subentry.data.get(key, default)
 
 
-class YanfengAILLMBaseEntity(YanfengAIBaseEntity):
+class AITaskLLMBaseEntity(AITaskBaseEntity):
     """Base entity for LLM-based entities."""
 
     _attr_icon = "mdi:brain"

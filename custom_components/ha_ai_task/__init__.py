@@ -1,4 +1,4 @@
-"""The Yanfeng AI Task integration."""
+"""The AI Task integration."""
 
 from __future__ import annotations
 
@@ -40,16 +40,16 @@ PLATFORMS = (
 )
 
 # Type alias for config entry with runtime data
-YanfengAIConfigEntry = ConfigEntry[aiohttp.ClientSession]
+AITaskConfigEntry = ConfigEntry[aiohttp.ClientSession]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Yanfeng AI Task."""
+    """Set up AI Task."""
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: YanfengAIConfigEntry) -> bool:
-    """Set up Yanfeng AI Task from a config entry."""
+async def async_setup_entry(hass: HomeAssistant, entry: AITaskConfigEntry) -> bool:
+    """Set up AI Task from a config entry."""
 
     # Create HTTP session
     session = aiohttp.ClientSession(
@@ -76,13 +76,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: YanfengAIConfigEntry) ->
 
 
 async def async_update_options(
-    hass: HomeAssistant, entry: YanfengAIConfigEntry
+    hass: HomeAssistant, entry: AITaskConfigEntry
 ) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: YanfengAIConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AITaskConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

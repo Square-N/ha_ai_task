@@ -1,4 +1,4 @@
-"""AI Task integration for Yanfeng AI Task."""
+"""AI Task integration."""
 
 from __future__ import annotations
 
@@ -24,13 +24,13 @@ from .const import (
 )
 from .entity import (
     ERROR_GETTING_RESPONSE,
-    YanfengAILLMBaseEntity,
+    AITaskLLMBaseEntity,
 )
 from .helpers import file_to_data_uri
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigSubentry
-    from . import YanfengAIConfigEntry
+    from . import AITaskConfigEntry
 
 
 async def async_setup_entry(
@@ -43,21 +43,21 @@ async def async_setup_entry(
         if subentry.subentry_type != "ai_task_data":
             continue
         async_add_entities(
-            [YanfengAITaskEntity(hass, config_entry, subentry)],
+            [AITaskEntity(hass, config_entry, subentry)],
             config_subentry_id=subentry.subentry_id,
         )
 
 
-class YanfengAITaskEntity(
+class AITaskEntity(
     ai_task.AITaskEntity,
-    YanfengAILLMBaseEntity,
+    AITaskLLMBaseEntity,
 ):
-    """Yanfeng AI Task entity."""
+    """AI Task entity."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: YanfengAIConfigEntry,
+        entry: AITaskConfigEntry,
         subentry: ConfigSubentry,
     ) -> None:
         """Initialize the entity."""

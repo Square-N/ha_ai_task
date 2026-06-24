@@ -1,4 +1,4 @@
-"""Intent handlers for Yanfeng AI Task integration."""
+"""Intent handlers for AI Task integration."""
 
 from __future__ import annotations
 
@@ -628,7 +628,7 @@ class HassNotifyIntent(BaseIntent):
         await self.hass.services.async_call(
             "persistent_notification", "create",
             {
-                "title": title or "Yanfeng AI Task",
+                "title": title or "AI Task",
                 "message": message
             },
             blocking=True

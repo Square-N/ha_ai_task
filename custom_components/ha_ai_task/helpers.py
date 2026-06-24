@@ -1,4 +1,4 @@
-"""Helper functions for Yanfeng AI Task integration."""
+"""Helper functions for the AI Task integration."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Constants for the Yanfeng AI Task integration."""
+"""Constants for the AI Task (DashScope) integration."""
 
 import logging
 
@@ -23,9 +23,9 @@ CONF_RECOMMENDED = "recommended"
 CONF_RESPONSE_MODE = "response_mode"
 
 # Default values
-DEFAULT_TITLE = "Yanfeng AI Task"
-DEFAULT_AI_TASK_NAME = "Yanfeng AI Task"
-DEFAULT_CONVERSATION_NAME = "Yanfeng AI Conversation"
+DEFAULT_TITLE = "AI Task"
+DEFAULT_AI_TASK_NAME = "AI Task"
+DEFAULT_CONVERSATION_NAME = "AI Conversation"
 DEFAULT_TEMPERATURE = 0.7
 DEFAULT_TOP_P = 0.9
 DEFAULT_MAX_TOKENS = 8192  # Increased from 2048 — reasoning models (e.g. qwen3.6-flash) consume significant tokens for thinking

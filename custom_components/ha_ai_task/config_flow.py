@@ -1,4 +1,4 @@
-"""Config flow for Yanfeng AI Task integration."""
+"""Config flow for AI Task integration."""
 
 from __future__ import annotations
 
@@ -94,8 +94,8 @@ class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
 
 
-class YanfengAITaskConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Yanfeng AI Task."""
+class AITaskConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for AI Task."""
 
     VERSION = 2
     MINOR_VERSION = 1
@@ -192,12 +192,12 @@ class YanfengAITaskConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {
-            "conversation": YanfengAISubentryFlowHandler,
-            "ai_task_data": YanfengAISubentryFlowHandler,
+            "conversation": AITaskSubentryFlowHandler,
+            "ai_task_data": AITaskSubentryFlowHandler,
         }
 
 
-class YanfengAISubentryFlowHandler(ConfigSubentryFlow):
+class AITaskSubentryFlowHandler(ConfigSubentryFlow):
     """Flow for managing subentries."""
 
     async def async_step_set_options(
@@ -345,13 +345,13 @@ class YanfengAISubentryFlowHandler(ConfigSubentryFlow):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> YanfengAITaskOptionsFlow:
+    ) -> AITaskOptionsFlow:
         """Create the options flow."""
-        return YanfengAITaskOptionsFlow(config_entry)
+        return AITaskOptionsFlow(config_entry)
 
 
-class YanfengAITaskOptionsFlow(OptionsFlow):
-    """Yanfeng AI Task config flow options handler."""
+class AITaskOptionsFlow(OptionsFlow):
+    """AI Task config flow options handler."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

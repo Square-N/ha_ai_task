@@ -19,5 +19,10 @@
   "services": {
     "generate_data": "mdi:file-document-outline",
     "generate_image": "mdi:image-outline"
+  },
+  "integration": {
+    "ha_ai_task": {
+      "default": "mdi:brain"
+    }
   }
 }

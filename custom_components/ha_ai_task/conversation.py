@@ -1,4 +1,4 @@
-"""Conversation support for the Yanfeng AI Task integration."""
+"""Conversation support for the AI Task integration."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from .const import (
     RESPONSE_MODE_SILENT,
     RESPONSE_MODE_SIMPLE,
 )
-from .entity import YanfengAILLMBaseEntity
+from .entity import AITaskLLMBaseEntity
 
 
 def is_service_call(user_input: str) -> bool:
@@ -180,17 +180,17 @@ async def async_setup_entry(
             continue
 
         async_add_entities(
-            [YanfengAIConversationEntity(config_entry, subentry)],
+            [AITaskConversationEntity(config_entry, subentry)],
             config_subentry_id=subentry.subentry_id,
         )
 
 
-class YanfengAIConversationEntity(
+class AITaskConversationEntity(
     conversation.ConversationEntity,
     conversation.AbstractConversationAgent,
-    YanfengAILLMBaseEntity,
+    AITaskLLMBaseEntity,
 ):
-    """Yanfeng AI conversation agent."""
+    """AI Task conversation agent."""
 
     _attr_supports_streaming = False  # ModelScope doesn't support streaming yet
 
