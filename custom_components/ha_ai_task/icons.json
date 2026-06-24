@@ -1,14 +1,19 @@
 {
-  "entity": {
-    "conversation": {
-      "agent": {
-        "default": "mdi:brain"
-      }
-    }
-  },
   "entity_component": {
     "_": {
       "default": "mdi:robot-outline"
+    }
+  },
+  "entity": {
+    "conversation": {
+      "_": {
+        "default": "mdi:brain"
+      }
+    },
+    "ai_task": {
+      "_": {
+        "default": "mdi:robot"
+      }
     }
   },
   "services": {
