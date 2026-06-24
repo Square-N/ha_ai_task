@@ -1,7 +1,6 @@
 {
   "name": "ha AI Task",
   "content_in_root": false,
-  "icon": "https://raw.githubusercontent.com/Square-N/ha_ai_task/master/custom_components/ha_ai_task/brand/icon.png",
   "filename": "ha_ai_task.zip",
   "render_readme": true,
   "homeassistant": "2024.1.0"
