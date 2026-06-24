@@ -52,6 +52,9 @@ class DashScopeAPIClient:
             "temperature": temperature,
             "top_p": top_p,
             "max_tokens": max_tokens,
+            # Disable reasoning for models that support it (e.g. qwen3.6-flash).
+            # Non-reasoning models simply ignore this parameter.
+            "enable_thinking": False,
         }
 
         if tools:
