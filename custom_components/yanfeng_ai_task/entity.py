@@ -33,14 +33,14 @@ from .const import (
 )
 from .helpers import DashScopeAPIClient, format_messages_for_dashscope
 
-ERROR_GETTING_RESPONSE = "Error getting response from ModelScope"
+ERROR_GETTING_RESPONSE = "Error getting response from AI API"
 
 # Max number of tool iterations to prevent infinite loops
 MAX_TOOL_ITERATIONS = 10
 
 
 def _format_tool(tool: llm.Tool, custom_serializer: Any | None) -> dict[str, Any]:
-    """Format HA tool to OpenAI/ModelScope compatible format."""
+    """Format HA tool to OpenAI-compatible format."""
     tool_spec = {
         "type": "function",
         "function": {
@@ -102,7 +102,7 @@ class YanfengAIBaseEntity:
 
     @property
     def client(self) -> DashScopeAPIClient:
-        """Return the ModelScope API client."""
+        """Return the AI API client."""
         return DashScopeAPIClient(self.session, self.api_key)
 
     def _get_option(self, key: str, default: Any = None) -> Any:
@@ -118,7 +118,7 @@ class YanfengAILLMBaseEntity(YanfengAIBaseEntity):
         chat_log: conversation.ChatLog,
         structure: dict[str, Any] | None = None,
     ) -> None:
-        """Handle a chat log by calling the ModelScope API with function calling support."""
+        """Handle a chat log by calling the AI API with function calling support."""
 
         # Get configuration
         # Priority: custom_chat_model > chat_model > default
@@ -153,11 +153,11 @@ class YanfengAILLMBaseEntity(YanfengAIBaseEntity):
             # Prepare messages from chat_log
             messages = self._prepare_messages_from_chat_log(chat_log, prompt, structure, custom_serializer)
 
-            LOGGER.debug("Sending %d messages to ModelScope (iteration %d)", len(messages), iteration + 1)
+            LOGGER.debug("Sending %d messages to AI API (iteration %d)", len(messages), iteration + 1)
             LOGGER.debug("Message roles: %s", [msg.get("role") for msg in messages])
 
             try:
-                # Call ModelScope API with tools
+                # Call AI API with tools
                 response = await self.client.generate_text(
                     model=model,
                     messages=messages,
@@ -167,11 +167,11 @@ class YanfengAILLMBaseEntity(YanfengAIBaseEntity):
                     tools=tools,
                 )
 
-                LOGGER.debug("Received ModelScope response (iteration %d): %s", iteration + 1, response)
+                LOGGER.debug("Received AI API response (iteration %d): %s", iteration + 1, response)
 
                 # Extract response
                 if "choices" not in response or not response["choices"]:
-                    LOGGER.error("Empty response from ModelScope API: %s", response)
+                    LOGGER.error("Empty response from AI API: %s", response)
                     from homeassistant.exceptions import HomeAssistantError
                     raise HomeAssistantError(ERROR_GETTING_RESPONSE)
 
@@ -189,12 +189,12 @@ class YanfengAILLMBaseEntity(YanfengAIBaseEntity):
                     LOGGER.error(
                         "Model returned finish_reason='tool_calls' but tool_calls is None. "
                         "This usually means the model doesn't fully support function calling. "
-                        "Consider using Qwen/Qwen2.5-72B-Instruct instead of VL models."
+                        "Consider using qwen3-vl-flash instead of VL models for better function calling support."
                     )
                     # Treat as final response with empty content
                     assistant_content = conversation.AssistantContent(
                         agent_id=self.entry.entry_id,
-                        content="抱歉，我遇到了一个问题。请尝试切换到 Qwen/Qwen2.5-72B-Instruct 模型以获得更好的设备控制支持。"
+                        content="抱歉，我遇到了一个问题。请尝试切换到 qwen-plus 或 qwen-turbo-latest 模型以获得更好的设备控制支持。"
                     )
                     chat_log.content.append(assistant_content)
                     break
@@ -287,9 +287,9 @@ class YanfengAILLMBaseEntity(YanfengAIBaseEntity):
                 # Re-raise ConverseError as-is
                 raise
             except Exception as err:
-                LOGGER.error("Error calling ModelScope API (iteration %d): %s", iteration + 1, err, exc_info=True)
+                LOGGER.error("Error calling AI API (iteration %d): %s", iteration + 1, err, exc_info=True)
                 from homeassistant.exceptions import HomeAssistantError
-                raise HomeAssistantError(f"Error calling ModelScope API: {err}") from err
+                raise HomeAssistantError(f"Error calling AI API: {err}") from err
 
         else:
             # Reached MAX_TOOL_ITERATIONS without finishing
@@ -437,7 +437,7 @@ class YanfengAILLMBaseEntity(YanfengAIBaseEntity):
         return "\n".join(prompt_parts)
 
     def _extract_response_text(self, response: dict[str, Any]) -> str:
-        """Extract text content from ModelScope API response."""
+        """Extract text content from AI API response."""
         try:
             if "choices" in response and response["choices"]:
                 choice = response["choices"][0]
