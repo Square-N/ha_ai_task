@@ -97,9 +97,11 @@ class DashScopeAPIClient:
         model: str,
         prompt: str,
         image_url: str | None = None,
-        size: str = "2048*1536",
+        size: str | None = None,
         quality: str = "standard",
         n: int = 1,
+        negative_prompt: str | None = None,
+        prompt_extend: bool | None = None,
     ) -> dict[str, Any]:
         """Generate or edit image using DashScope native multimodal generation API.
 
@@ -107,20 +109,41 @@ class DashScopeAPIClient:
             model: Model ID (e.g. qwen-image-2.0-pro, qwen-image-3.0)
             prompt: Text prompt
             image_url: Optional input image URL or data URI (for image editing)
-            size: Image size (e.g. 2048*1536)
+            size: Image size (e.g. 2048*1536). If omitted for editing mode,
+                  API will auto-match input image aspect ratio.
             quality: Image quality (ignored by DashScope, kept for compat)
             n: Number of images to generate
+            negative_prompt: Text describing what NOT to include in the image
+            prompt_extend: Override prompt auto-expansion. Default: true for
+                           text-to-image, false for image editing.
 
         Returns:
-            Dict with key "images": list of dicts {"url": "...", "b64_json": "..."}
-            (OpenAI-compatible format for downstream code)
+            Dict with key "data": list of dicts {"url": "..."}
         """
+        is_editing = image_url is not None
+
         # Build content array for the native API
         content = []
-        if image_url:
-            # Image editing mode: image comes first
+        if is_editing:
             content.append({"image": image_url})
         content.append({"text": prompt})
+
+        # Build parameters intelligently based on mode
+        parameters = {"n": n}
+
+        if is_editing:
+            # Image editing: disable prompt_extend to avoid full redraw
+            parameters["prompt_extend"] = False if prompt_extend is None else prompt_extend
+            # Don't force size; let API match input image aspect ratio
+            if size:
+                parameters["size"] = size
+        else:
+            # Text-to-image: enable prompt_extend by default for better results
+            parameters["prompt_extend"] = True if prompt_extend is None else prompt_extend
+            parameters["size"] = size or "2048*2048"
+
+        if negative_prompt:
+            parameters["negative_prompt"] = negative_prompt
 
         payload = {
             "model": model,
@@ -132,22 +155,19 @@ class DashScopeAPIClient:
                     }
                 ]
             },
-            "parameters": {
-                "size": size,
-                "n": n,
-            },
+            "parameters": parameters,
         }
 
-        # For non-editing text-to-image, simplify the payload
-        if not image_url:
+        # For text-to-image, simplify the content (no image field)
+        if not is_editing:
             payload["input"]["messages"][0]["content"] = [{"text": prompt}]
 
         try:
             url = f"{self.native_base}services/aigc/multimodal-generation/generation"
             headers = {**self.headers}
 
-            LOGGER.debug("Sending DashScope image request to %s (model=%s, has_image=%s)",
-                         url, model, bool(image_url))
+            LOGGER.debug("Sending DashScope image request to %s (model=%s, has_image=%s, prompt_extend=%s)",
+                         url, model, is_editing, parameters.get("prompt_extend"))
 
             async with self.session.post(
                 url, headers=headers, json=payload

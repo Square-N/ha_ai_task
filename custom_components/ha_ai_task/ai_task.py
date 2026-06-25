@@ -157,21 +157,13 @@ class AITaskEntity(
             image_model = self._get_option(CONF_IMAGE_MODEL, RECOMMENDED_IMAGE_MODEL)
             LOGGER.debug("Using predefined image model: %s", image_model)
 
-        # Handle image URL for editing models
+        # Handle image source for editing models
+        # Priority: local attachment > public URL in prompt text
+        import re
         image_url = None
 
-        # 1. Extract URL from prompt text (public URLs)
-        import re
-        url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
-        url_matches = re.findall(url_pattern, prompt)
-
-        if url_matches:
-            image_url = url_matches[0]
-            prompt = re.sub(url_pattern, '', prompt).strip()
-            LOGGER.info("Extracted image URL from prompt: %s", image_url)
-
-        # 2. For local attachment, convert to base64 data URI (works with DashScope native API)
-        elif image_attachment_path:
+        # 1. Local attachment takes priority (user explicitly attached it)
+        if image_attachment_path:
             try:
                 image_url = await file_to_data_uri(
                     image_attachment_path, image_attachment_mime_type
@@ -180,17 +172,32 @@ class AITaskEntity(
             except Exception as err:
                 LOGGER.warning("Failed to convert local image: %s, will try without it", err)
 
+        # 2. Fallback: extract URL from prompt text (for pasted public URLs)
+        if image_url is None:
+            url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
+            url_matches = re.findall(url_pattern, prompt)
+            if url_matches:
+                image_url = url_matches[0]
+                prompt = re.sub(url_pattern, '', prompt).strip()
+                LOGGER.info("Extracted image URL from prompt: %s", image_url)
+
         LOGGER.debug("Using image model: %s for prompt: %s (image_url: %s)",
                      image_model, prompt[:100], "yes" if image_url else "none")
 
         try:
-            response = await self.client.generate_image(
-                model=image_model,
-                prompt=prompt,
-                image_url=image_url,
-                size="2048*1536",
-                n=1,
-            )
+            # Don't force size when editing — let API auto-match input image aspect ratio
+            kwargs = {
+                "model": image_model,
+                "prompt": prompt,
+                "image_url": image_url,
+                "n": 1,
+            }
+
+            # Only pass size for text-to-image (no reference image)
+            if image_url is None:
+                kwargs["size"] = "2048*2048"
+
+            response = await self.client.generate_image(**kwargs)
 
             # Extract image URLs from response (OpenAI-compatible format)
             image_urls = []
