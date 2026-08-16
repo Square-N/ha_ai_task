@@ -194,12 +194,12 @@ class AITaskLLMBaseEntity(AITaskBaseEntity):
                     LOGGER.error(
                         "Model returned finish_reason='tool_calls' but tool_calls is None. "
                         "This usually means the model doesn't fully support function calling. "
-                        "Consider using qwen3-vl-flash instead of VL models for better function calling support."
+                        "Consider using qwen3.6-flash instead of VL models for better function calling support."
                     )
                     # Treat as final response with empty content
                     assistant_content = conversation.AssistantContent(
                         agent_id=self.entry.entry_id,
-                        content="抱歉，我遇到了一个问题。请尝试切换到 qwen-plus 或 qwen-turbo-latest 模型以获得更好的设备控制支持。"
+                        content="抱歉，我遇到了一个问题。请尝试切换到 qwen-plus 或 qwen3.6-flash 模型以获得更好的设备控制支持。"
                     )
                     chat_log.content.append(assistant_content)
                     break
