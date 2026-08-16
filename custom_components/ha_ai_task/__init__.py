@@ -102,7 +102,7 @@ async def _test_api_connection(session: aiohttp.ClientSession, api_key: str) -> 
         }
 
         dashscope_payload = {
-            "model": "qwen3-vl-flash",
+            "model": RECOMMENDED_CHAT_MODEL,
             "messages": [{"role": "user", "content": "Hello"}],
             "max_tokens": 10,
         }
