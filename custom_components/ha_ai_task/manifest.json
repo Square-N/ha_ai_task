@@ -1,7 +1,7 @@
 {
   "domain": "ha_ai_task",
   "name": "AI Task (DashScope)",
-  "version": "0.3",
+  "version": "0.3.9",
   "config_entry_version": 1,
   "after_dependencies": ["assist_pipeline", "intent"],
   "codeowners": ["@Square-N"],
