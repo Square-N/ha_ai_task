@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Yanfeng AI Task",
+        "title": "AI Task",
         "description": "配置您的 API Key 和模型设置",
         "data": {
           "api_key": "API Key",
@@ -14,7 +14,7 @@
       }
     },
     "error": {
-      "invalid_auth": "无效的 API Key。请检查您的 ModelScope API Key。",
+      "invalid_auth": "无效的 API Key。请检查您的 DashScope API Key。",
       "unknown": "未知错误。请重试。"
     },
     "abort": {
@@ -76,8 +76,8 @@
   "options": {
     "step": {
       "init": {
-        "title": "Yanfeng AI Task 选项",
-        "description": "配置 Yanfeng AI Task 的选项",
+        "title": "AI Task 选项",
+        "description": "配置 AI Task 的选项",
         "data": {
           "prompt": "系统提示词",
           "llm_hass_api": "控制 Home Assistant",
@@ -92,15 +92,15 @@
   },
   "entity": {
     "conversation": {
-      "yanfeng_ai": {
-        "name": "Yanfeng AI"
+      "generate_content": {
+        "name": "生成内容"
       }
     }
   },
   "services": {
     "generate_content": {
       "name": "生成内容",
-      "description": "使用 Yanfeng AI Task 生成内容",
+      "description": "使用 AI Task 生成内容",
       "fields": {
         "prompt": {
           "name": "提示词",
