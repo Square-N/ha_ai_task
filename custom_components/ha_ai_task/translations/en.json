@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Yanfeng AI Task",
-        "description": "Configure your API key and model settings for Yanfeng AI Task integration.",
+        "title": "AI Task",
+        "description": "Configure your API key and model settings for AI Task integration.",
         "data": {
           "api_key": "API Key",
           "chat_model": "Chat Model",
@@ -14,7 +14,7 @@
       }
     },
     "error": {
-      "invalid_auth": "Invalid API key. Please check your ModelScope API key.",
+      "invalid_auth": "Invalid API key. Please check your DashScope API key.",
       "unknown": "Unknown error occurred. Please try again."
     },
     "abort": {
@@ -76,8 +76,8 @@
   "options": {
     "step": {
       "init": {
-        "title": "Yanfeng AI Task Options",
-        "description": "Configure the options for Yanfeng AI Task.",
+        "title": "AI Task Options",
+        "description": "Configure the options for AI Task.",
         "data": {
           "prompt": "System Prompt",
           "llm_hass_api": "Control Home Assistant",
@@ -92,15 +92,15 @@
   },
   "entity": {
     "conversation": {
-      "yanfeng_ai": {
-        "name": "Yanfeng AI"
+      "generate_content": {
+        "name": "Generate content"
       }
     }
   },
   "services": {
     "generate_content": {
       "name": "Generate content",
-      "description": "Generate content using Yanfeng AI Task.",
+      "description": "Generate content using AI Task.",
       "fields": {
         "prompt": {
           "name": "Prompt",
