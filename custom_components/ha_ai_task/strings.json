@@ -14,7 +14,7 @@
       }
     },
     "error": {
-      "invalid_auth": "Invalid API key. Please check your ModelScope API key.",
+      "invalid_auth": "Invalid API key. Please check your DashScope API key.",
       "unknown": "Unknown error occurred. Please try again."
     },
     "abort": {
