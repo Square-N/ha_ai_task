@@ -58,6 +58,7 @@ from .const import (
     SUPPORTED_CHAT_MODELS,
     SUPPORTED_IMAGE_MODELS,
     TIMEOUT_SECONDS,
+    resolve_chat_model,
 )
 from .helpers import DashScopeAPIClient
 
@@ -70,19 +71,20 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     )
     
     try:
+        # Test API connection with the selected model. resolve_chat_model()
+        # falls back to the recommended model when a stale/retired model was
+        # stored, so the connectivity test can never probe a dead model.
+        test_model = resolve_chat_model(data.get(CONF_CHAT_MODEL))
         client = DashScopeAPIClient(session, data[CONF_API_KEY])
-        
-        # Test API connection with selected model
-        test_model = data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+
         await client.generate_text(
             model=test_model,
             messages=[{"role": "user", "content": "Hello"}],
             max_tokens=10
         )
-        
+
     except Exception as err:
-        LOGGER.error("Failed to validate API key with model %s: %s", 
-                    data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL), err)
+        LOGGER.error("Failed to validate API key with model %s: %s", test_model, err)
         raise InvalidAuth from err
     finally:
         await session.close()
@@ -285,7 +287,7 @@ class AITaskSubentryFlowHandler(ConfigSubentryFlow):
                     ),
                     vol.Optional(
                         CONF_CHAT_MODEL,
-                        default=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+                        default=resolve_chat_model(options.get(CONF_CHAT_MODEL)),
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=SUPPORTED_CHAT_MODELS,
@@ -408,7 +410,7 @@ class AITaskOptionsFlow(OptionsFlow):
                     ),
                     vol.Optional(
                         CONF_CHAT_MODEL,
-                        default=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+                        default=resolve_chat_model(options.get(CONF_CHAT_MODEL)),
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=SUPPORTED_CHAT_MODELS,

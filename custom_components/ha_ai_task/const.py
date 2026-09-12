@@ -69,10 +69,13 @@ DEFAULT_PROMPT = """你是一个专业的智能家居助手，运行在 Home Ass
 DASHSCOPE_API_BASE = "https://dashscope.aliyuncs.com/compatible-mode/"
 
 # Supported chat models (DashScope compatible-mode)
+# NOTE: keep this in sync with models that are still online on Bailian.
+# "qwen3-vl-flash" was removed because Alibaba Cloud retires it on 2026-10-10
+# (see https://www.aliyun.com/notice/118344); its recommended replacement is
+# qwen3.6-flash, which is already the recommended default below.
 SUPPORTED_CHAT_MODELS = [
     "qwen3.6-flash",
     "qwen3.7-flash",
-    "qwen3-vl-flash",
     "qwen-plus",
     "qwen-max",
 ]
@@ -88,6 +91,19 @@ IMAGE_EDITING_MODELS = [
 # Recommended models
 RECOMMENDED_CHAT_MODEL = "qwen3.6-flash"
 RECOMMENDED_IMAGE_MODEL = "qwen-image-2.0-pro"
+
+
+def resolve_chat_model(model: str | None) -> str:
+    """Return a chat model that is still supported.
+
+    Guards against stale configuration values pointing at a since-retired
+    model (e.g. ``qwen3-vl-flash``): option forms get a valid default and the
+    connectivity test never probes a model that is no longer available.
+    """
+    if model and model in SUPPORTED_CHAT_MODELS:
+        return model
+    return RECOMMENDED_CHAT_MODEL
+
 
 # Task polling settings
 TASK_POLL_INTERVAL = 2

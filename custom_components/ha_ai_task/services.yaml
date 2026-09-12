@@ -13,15 +13,14 @@ generate_content:
       name: Model
       description: The model to use for generation.
       required: false
-      default: "qwen-plus"
+      default: "qwen3.6-flash"
       selector:
         select:
           options:
-            - "qwen-turbo"
+            - "qwen3.6-flash"
+            - "qwen3.7-flash"
             - "qwen-plus"
             - "qwen-max"
-            - "qwen-vl-plus"
-            - "qwen-vl-max"
     temperature:
       name: Temperature
       description: Controls randomness in the output.
