@@ -5,9 +5,20 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Any
 
+import json
+
 import aiohttp
 import voluptuous as vol
-from voluptuous_openapi import convert
+
+try:
+    # Home Assistant >= 2026.9: core converts LLM tool schemas with probatio
+    # (see homeassistant/helpers/llm.py). Its selector serializer returns
+    # probatio.UNSUPPORTED markers for constructs it cannot map.
+    from probatio import UNSUPPORTED, to_openapi as convert_schema
+except ModuleNotFoundError:  # Home Assistant < 2026.9
+    from voluptuous_openapi import convert as convert_schema
+
+    UNSUPPORTED = object()
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
@@ -39,6 +50,75 @@ ERROR_GETTING_RESPONSE = "Error getting response from AI API"
 MAX_TOOL_ITERATIONS = 10
 
 
+def _sanitize_schema(value: Any) -> Any:
+    """Return a JSON-serializable copy of a converted schema fragment.
+
+    HA's selector serializer can embed probatio.UNSUPPORTED markers
+    (class ``_Unsupported``) that would make json.dumps() of the request
+    payload fail with "Object of type _Unsupported is not JSON serializable".
+    """
+    if value is UNSUPPORTED:
+        return {}
+    if isinstance(value, dict):
+        return {key: _sanitize_schema(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_sanitize_schema(item) for item in value]
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    try:
+        json.dumps(value)
+    except TypeError:
+        return {}
+    return value
+
+
+def _ensure_object_schema(schema: Any) -> dict[str, Any]:
+    """Normalize a tool parameter schema to a JSON object root.
+
+    OpenAI-compatible APIs expect ``parameters`` to be an object schema.
+    Some tools (e.g. HassStartTimer) convert to a root union (anyOf/oneOf),
+    which many APIs reject. Prefer an object branch when present, otherwise
+    drop composition keywords at the root.
+    """
+    if not isinstance(schema, dict):
+        return {"type": "object", "properties": {}}
+
+    for union_key in ("anyOf", "oneOf"):
+        if union_key not in schema:
+            continue
+        branches = [b for b in (schema.get(union_key) or []) if isinstance(b, dict)]
+        object_branches = [
+            branch
+            for branch in branches
+            if branch.get("type") == "object" or "properties" in branch
+        ]
+        if object_branches:
+            chosen = dict(object_branches[0])
+            for key, value in schema.items():
+                if key not in {"anyOf", "oneOf", "allOf", "not"}:
+                    chosen.setdefault(key, value)
+            schema = chosen
+        else:
+            schema = {
+                key: value
+                for key, value in schema.items()
+                if key not in {"anyOf", "oneOf", "allOf", "not"}
+            }
+        break
+
+    if "properties" in schema or schema.get("type") == "object":
+        schema.setdefault("type", "object")
+        schema.setdefault("properties", {})
+        return schema
+
+    # Last resort: wrap non-object schemas so the API accepts the tool.
+    return {
+        "type": "object",
+        "properties": {"value": schema} if schema else {},
+        "additionalProperties": True,
+    }
+
+
 def _format_tool(tool: llm.Tool, custom_serializer: Any | None) -> dict[str, Any]:
     """Format HA tool to OpenAI-compatible format."""
     tool_spec = {
@@ -50,10 +130,13 @@ def _format_tool(tool: llm.Tool, custom_serializer: Any | None) -> dict[str, Any
     }
 
     # Convert parameters schema if provided
-    if tool.parameters and tool.parameters.schema:
+    parameters = getattr(tool, "parameters", None)
+    inner_schema = getattr(parameters, "schema", None)
+    if parameters is not None and (inner_schema is None or inner_schema):
         try:
-            # Use voluptuous_openapi to convert schema
-            schema = convert(tool.parameters, custom_serializer=custom_serializer)
+            # HA >= 2026.9: probatio.to_openapi; older HA: voluptuous_openapi
+            schema = convert_schema(parameters, custom_serializer=custom_serializer)
+            schema = _ensure_object_schema(_sanitize_schema(schema))
             tool_spec["function"]["parameters"] = schema
             LOGGER.debug("Converted tool %s parameters: %s", tool.name, schema)
         except Exception as err:
@@ -142,7 +225,7 @@ class AITaskLLMBaseEntity(AITaskBaseEntity):
 
         # Extract tools from chat_log if available
         tools = None
-        custom_serializer = llm.selector_serializer
+        custom_serializer = getattr(llm, "selector_serializer", None)
         if chat_log.llm_api:
             tools = [
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
@@ -446,11 +529,13 @@ class AITaskLLMBaseEntity(AITaskBaseEntity):
             "Please respond with a JSON object that matches the following structure:"
         ]
 
-        # Handle voluptuous Schema objects
+        # Handle voluptuous/probatio Schema objects
         if hasattr(structure, 'schema'):
-            # It's a voluptuous Schema object - convert using voluptuous_openapi
+            # It's a Schema object - convert to an OpenAPI-ish dict
             try:
-                schema_dict = convert(structure, custom_serializer=custom_serializer)
+                schema_dict = _sanitize_schema(
+                    convert_schema(structure, custom_serializer=custom_serializer)
+                )
             except Exception as err:
                 LOGGER.warning("Failed to convert schema: %s", err)
                 schema_dict = structure.schema if isinstance(structure.schema, dict) else {}
