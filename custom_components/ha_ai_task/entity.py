@@ -338,7 +338,13 @@ class AITaskLLMBaseEntity(AITaskBaseEntity):
                                 tool_args = {}
 
                         ha_tool_calls.append(
-                            llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
+                            llm.ToolInput(
+                                tool_name=tool_name,
+                                tool_args=tool_args,
+                                # Preserve the provider's id so the tool result can
+                                # reference the exact call when sent back.
+                                id=tool_call.get("id") or f"call_{len(ha_tool_calls)}",
+                            )
                         )
 
                     # Add assistant content with tool calls
@@ -351,20 +357,18 @@ class AITaskLLMBaseEntity(AITaskBaseEntity):
 
                     # Execute tools via HA's conversation system
                     if chat_log.llm_api:
-                        for i, tool_call_input in enumerate(ha_tool_calls):
+                        for tool_call_input in ha_tool_calls:
                             try:
-                                # Get the tool_call_id from the original response
-                                tool_call_id = tool_calls[i].get("id", f"call_{i}")
-
                                 # Execute the tool
                                 tool_result = await chat_log.llm_api.async_call_tool(tool_call_input)
 
-                                # Add tool result to chat_log with required parameters
+                                # HA 2026.10 renamed the field to `result` and it
+                                # expects an llm.ToolResult instance.
                                 tool_result_content = conversation.ToolResultContent(
                                     agent_id=self.entry.entry_id,
-                                    tool_call_id=tool_call_id,
+                                    tool_call_id=tool_call_input.id,
                                     tool_name=tool_call_input.tool_name,
-                                    tool_result=tool_result,
+                                    result=tool_result,
                                 )
                                 chat_log.content.append(tool_result_content)
 
@@ -373,12 +377,11 @@ class AITaskLLMBaseEntity(AITaskBaseEntity):
                             except Exception as err:
                                 LOGGER.error("Error executing tool %s: %s", tool_call_input.tool_name, err)
                                 # Add error result with required parameters
-                                tool_call_id = tool_calls[i].get("id", f"call_{i}") if i < len(tool_calls) else f"call_{i}"
                                 error_result = conversation.ToolResultContent(
                                     agent_id=self.entry.entry_id,
-                                    tool_call_id=tool_call_id,
+                                    tool_call_id=tool_call_input.id,
                                     tool_name=tool_call_input.tool_name,
-                                    tool_result={"error": str(err)},
+                                    result=llm.ToolResult(data={"error": str(err)}, error=True),
                                 )
                                 chat_log.content.append(error_result)
 
@@ -489,11 +492,16 @@ class AITaskLLMBaseEntity(AITaskBaseEntity):
                 if content.tool_calls:
                     message["tool_calls"] = [
                         {
-                            "id": f"call_{i}",
+                            "id": tc.id or f"call_{i}",
                             "type": "function",
                             "function": {
                                 "name": tc.tool_name,
-                                "arguments": tc.tool_args if isinstance(tc.tool_args, str) else str(tc.tool_args),
+                                # OpenAI-compatible APIs require a JSON string.
+                                "arguments": (
+                                    tc.tool_args
+                                    if isinstance(tc.tool_args, str)
+                                    else json.dumps(tc.tool_args, ensure_ascii=False, default=str)
+                                ),
                             }
                         }
                         for i, tc in enumerate(content.tool_calls)
@@ -503,11 +511,17 @@ class AITaskLLMBaseEntity(AITaskBaseEntity):
 
             elif isinstance(content, conversation.ToolResultContent):
                 # Add tool result as a tool message
-                # OpenAI format expects tool messages with tool_call_id
+                # OpenAI format requires tool_call_id to match the assistant call.
+                result_data = content.result.data
                 messages.append({
                     "role": "tool",
+                    "tool_call_id": content.tool_call_id,
                     "name": content.tool_name,
-                    "content": str(content.tool_result) if content.tool_result else "{}",
+                    "content": (
+                        result_data
+                        if isinstance(result_data, str)
+                        else json.dumps(result_data, ensure_ascii=False, default=str)
+                    ) if result_data else "{}",
                 })
                 LOGGER.debug("Added tool result for %s", content.tool_name)
 
